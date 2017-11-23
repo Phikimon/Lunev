@@ -27,6 +27,7 @@ enum { BUF_SIZE = (1 << 14) };
 //------------------------------------------
 
 int incoming_bit = 0;
+int signal_catched = 0;
 
 //------------------------------------------
 
@@ -86,16 +87,21 @@ int main(int argc, char* argv[])
         }
 
         int fd = open(argv[1], O_RDONLY);
+        ASSERT("open", fd != -1);
         child(fd, ppid);
     }
 }
 
 void incoming_bit_handler(int sig)
 {
+    signal_catched = 1;
     incoming_bit = (sig == SIGUSR1) ? 0 : 1;
 }
 
-void dummy_handler(int sig) {}
+void dummy_handler(int sig)
+{
+    signal_catched = 1;
+}
 
 void receive(pid_t where, void* buf, int size)
 {
@@ -107,8 +113,12 @@ void receive(pid_t where, void* buf, int size)
     ASSERT("sigemptyset", ses_ret != -1);
 
     for (int j = 0; j < CHAR_BIT * size; j++) {
-        ssp_ret = sigsuspend(&sigs);
-        ASSERT("sigsuspend", errno == EINTR);
+        while (!signal_catched)
+        {
+            ssp_ret = sigsuspend(&sigs);
+            ASSERT("sigsuspend", errno == EINTR);
+        }
+        signal_catched = 0;
         if (incoming_bit) {
             cbuf[j / CHAR_BIT] |=   1 << (j % CHAR_BIT);
         } else {
@@ -134,9 +144,13 @@ void transmit(pid_t where, void* buf, int size)
         kill_ret = kill(where, sig);
         ASSERT("kill", kill_ret != -1);
         alarm(1);
-        ssp_ret = sigsuspend(&sigs);
+        while (!signal_catched)
+        {
+            ssp_ret = sigsuspend(&sigs);
+            ASSERT("sigsuspend", errno == EINTR);
+        }
+        signal_catched = 0;
         alarm(0);
-        ASSERT("sigsuspend", errno == EINTR);
     }
 }
 
