@@ -10,7 +10,7 @@ executed in arbitrary order from different terminals.
 0. Deadlocks are prohibited.
 1. There can be arbitrary number of ***producers*** and ***consumers***.
 2. Usage of file locks, semaphores, signals(even handling) and other
-communication and synchronization facilities but FIFO is permitted.
+communication and synchronization facilities but FIFO is not permitted.
 3. Since no blocking synchronization syscalls must be present in
 the program, one busy wait is allowed.
 4. If after having a handshake ***producer*** or ***consumer*** dies, his
@@ -90,7 +90,7 @@ Write program that produces N children(N is the command line argument).
 Then, after all of them are born, they print their numbers(in order of appearence).
 
 ***Requirements:***
-1. `wait()` syscall family is permitted to be used.
+1. `wait()` syscall family is not permitted to be used.
 2. Numbers shouldn't intermix in this test:
 ```sh
     for (( i=1; i <= 100; i++ ))
@@ -116,7 +116,7 @@ executed in arbitrary order from different terminals.
 0. Deadlocks are prohibited.
 1. There can be arbitrary number of ***producers*** and ***consumers***.
 2. Usage of any kind of communication and synchronization facilities but
-System V IPC **semaphores** and **shared memory** is permitted.
+System V IPC **semaphores** and **shared memory** is not permitted.
 3. No busy waits are allowed.
 4. Any ***producer*** or ***consumer*** can die at any time, this should cause
 ***partner*** to die, but not prevent any other producers or consumers from
